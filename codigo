@@ -1,0 +1,281 @@
+{% assign section_id = "section-" | append: section.id %}
+{%- style -%}
+:root {
+  --float-position-bottom-desktop: {{ section.settings.float_position_bottom_desktop }}%;
+  --float-position-right-desktop: {{ section.settings.float_position_right_desktop }}%;
+  --float-position-bottom-mobile: {{ section.settings.float_position_bottom_mobile }}%;
+  --float-position-right-mobile: {{ section.settings.float_position_right_mobile }}%;
+}
+
+#{{ section_id }} {
+  position: fixed;
+  bottom: var(--float-position-bottom-mobile);
+  right: var(--float-position-right-mobile);
+  z-index: 9999;
+  cursor: pointer;
+}
+
+#{{ section_id }} .circle-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#{{ section_id }} .circle-content__image-wrapper img {
+  height: {{ section.settings.image_size_mobile }}px;
+  width: auto;
+}
+
+/* Ocultar el texto por defecto */
+#{{ section_id }} .circle-content__text {
+  display: none;
+  position: absolute;
+  background-color: {{ section.settings.bubble_background_color }};
+  color: {{ section.settings.bubble_text_color }};
+  padding: {{ section.settings.bubble_padding }}px;
+  border-radius: 8px;
+  font-size: {{ section.settings.text_size_mobile }}px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* Mostrar el texto al hacer hover */
+#{{ section_id }} .circle-content:hover .circle-content__text {
+  display: block;
+}
+
+/* Posicionar la burbuja basada en la selección del usuario */
+#{{ section_id }} .circle-content__text {
+  {% if section.settings.bubble_position == "left" %}
+    left: {{ section.settings.bubble_distance_horizontal | abs }}px;  /* Movemos a la izquierda */
+  {% else %}
+    right: {{ section.settings.bubble_distance_horizontal | abs }}px; /* Movemos a la derecha */
+  {% endif %}
+  top: {{ section.settings.bubble_distance_vertical }}px;
+}
+
+@media (min-width: 750px) {
+  #{{ section_id }} {
+    bottom: var(--float-position-bottom-desktop);
+    right: var(--float-position-right-desktop);
+  }
+
+  #{{ section_id }} .circle-content__image-wrapper img {
+    height: {{ section.settings.image_size_desktop }}px;
+  }
+
+  #{{ section_id }} .circle-content__text {
+    font-size: {{ section.settings.text_size_desktop }}px;
+  }
+}
+{%- endstyle -%}
+
+<div id="{{ section_id }}">
+  <div class="circle-content">
+    <div class="circle-content__image-wrapper">
+      <img src="{{ section.settings.image | img_url: 'master' }}" alt="" width="auto" role="presentation" loading="eager">
+    </div>
+    <p class="circle-content__text">{{ section.settings.heading_text }}</p>
+  </div>  
+</div>
+
+<script src="https://cdn.jsdelivr.net/gh/peterhry/CircleType@2.3.1/dist/circletype.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const linkType = {{ section.settings.link_type | json }};
+    const circleContent = document.getElementById('{{ section_id }}');
+
+    function updateLinkBehavior() {
+      if (linkType === 'top') {
+        circleContent.addEventListener('click', function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      } else if (linkType === 'url') {
+        circleContent.addEventListener('click', function() {
+          window.location.href = '{{ section.settings.link_url }}';
+        });
+      }
+    }
+
+    updateLinkBehavior();
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Enlace Flotante",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading_text",
+      "label": "Texto del globo",
+      "default": "Volver al inicio"
+    },
+    {
+      "type": "range",
+      "id": "text_size_mobile",
+      "label": "Tamaño del texto (móvil)",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "default": 12,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "text_size_desktop",
+      "label": "Tamaño del texto (escritorio)",
+      "min": 10,
+      "max": 100,
+      "step": 1,
+      "default": 14,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "bubble_padding",
+      "label": "Padding del globo",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 10,
+      "unit": "px"
+    },
+    {
+      "type": "radio",
+      "id": "bubble_position",
+      "label": "Posición del globo respecto a la imagen",
+      "default": "right",
+      "options": [
+        { "value": "left", "label": "Izquierda" },
+        { "value": "right", "label": "Derecha" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "bubble_distance_horizontal",
+      "label": "Distancia horizontal (px)",
+      "min": -200,  
+      "max": 200,
+      "step": 5,  
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "bubble_distance_vertical",
+      "label": "Distancia vertical (px)",
+      "min": -200,
+      "max": 200,
+      "step": 5,
+      "default": 0,
+      "unit": "px"
+    },
+    {
+      "type": "color",
+      "id": "bubble_background_color",
+      "label": "Color de fondo del globo",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "bubble_text_color",
+      "label": "Color del texto del globo",
+      "default": "#ffffff"
+    },
+    {
+      "type": "url",
+      "id": "link_url",
+      "label": "URL del enlace",
+      "info": "Funciona solo si el tipo de enlace es URL"
+    },
+    {
+      "type": "select",
+      "id": "link_type",
+      "options": [
+        { "value": "none", "label": "Ninguno" },
+        { "value": "top", "label": "Desplazar al inicio" },
+        { "value": "url", "label": "Enlace a URL" }
+      ],
+      "default": "none",
+      "label": "Tipo de enlace"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagen"
+    },
+    {
+      "type": "range",
+      "id": "image_size_mobile",
+      "min": 8,
+      "max": 400,
+      "step": 4,
+      "unit": "px",
+      "label": "Altura de la imagen (móvil)",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "image_size_desktop",
+      "min": 8,
+      "max": 400,
+      "step": 4,
+      "unit": "px",
+      "label": "Altura de la imagen (escritorio)",
+      "default": 32
+    },
+    {
+      "type": "range",
+      "id": "float_position_bottom_mobile",
+      "label": "Posición inferior en móvil (%)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 3,
+      "unit": "%"
+    },
+    {
+      "type": "range",
+      "id": "float_position_right_mobile",
+      "label": "Posición derecha en móvil (%)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 3,
+      "unit": "%"
+    },
+    {
+      "type": "range",
+      "id": "float_position_bottom_desktop",
+      "label": "Posición inferior en escritorio (%)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 3,
+      "unit": "%"
+    },
+    {
+      "type": "range",
+      "id": "float_position_right_desktop",
+      "label": "Posición derecha en escritorio (%)",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "default": 3,
+      "unit": "%"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Enlace Flotante",
+      "settings": {}
+    }
+  ]
+}
+{% endschema %}
